@@ -22,14 +22,12 @@
       {
         "src": "screenshot-1.png",
         "sizes": "1080x1920",
-        "type": "image/png",
-        "form_factor": "any"
+        "type": "image/png"
       },
       {
         "src": "screenshot-2.png",
         "sizes": "1280x720",
-        "type": "image/png",
-        "form_factor": "any"
+        "type": "image/png"
       }
     ]
   }
