@@ -1,0 +1,2343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RABS KITCHEN MANAGEMENT DATABASE</title>
+
+     <!-- Favicon for your site -->
+     <link rel="icon" href="rabs.jpeg" type="image/png">
+
+     <link rel="manifest" href="/manifest.json">
+
+
+
+    <style>
+        body {
+            
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+h1 {
+    position: sticky;
+    top: 0;
+    background-color: #4CAF50;
+    color: white;
+    padding: 15px;
+    z-index: 3;
+    margin: 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.table-container {
+    flex: 1;
+    overflow-x: auto; /* Enable horizontal scrolling */
+    padding: 10px;
+}
+
+/* Ensure the table is responsive */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1;
+}
+
+thead {
+    position: sticky;
+    top: -12px; /* Sticks to the top of the table container */
+    background-color: #4CAF50;
+    color: white;
+    z-index: 2;
+}
+
+th, td {
+    padding: 8px;
+    border: 1px solid #dddddd;
+    text-align: center;
+}
+
+th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+td input[type="number"], td input[type="text"] {
+    width: 90%;
+    padding: 5px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    text-align: center;
+    border-radius: 4px; /* Rounded corners for inputs */
+}
+
+td {
+    font-weight: bold;
+}
+
+/* Alternating row colors for better visibility */
+.food-row:nth-child(odd) {
+    background-color: #f9f9f9; /* Light gray for odd rows */
+}
+
+.food-row:nth-child(even) {
+    background-color: #e0f7fa; /* Light blue for even rows */
+}
+
+/* Highlight the row when hovered */
+.food-row:hover {
+    background-color: #ffeb3b; /* Yellow highlight on hover */
+}
+
+@media screen and (max-width: 600px) {
+    h1 {
+        font-size: 1.5em; /* Adjust header size for mobile */
+        margin-top: -10px;
+    }
+    th, td {
+        font-size: 0.9em; /* Adjust font size for table */
+        padding: 6px; /* Adjust padding for smaller screens */
+    }
+    td input {
+        font-size: 1em; /* Make input text larger for usability */
+    }
+}
+
+/* Input styling */
+input::placeholder {
+    color: #888; /* Light gray color for the placeholder */
+    font-style: italic; /* Italic text */
+    opacity: 1; /* Ensures the placeholder color is applied */
+}
+
+input[type="number"], .remarks-input {
+    padding: 10px; /* Padding inside the input */
+    border: 1px solid #ddd; /* Border style */
+    border-radius: 4px; /* Rounded corners */
+    width: 100%; /* Full width for responsive design */
+    box-sizing: border-box; /* Ensures padding is included in the total width */
+}
+
+/* Submit button styling */
+.submit-button {
+    background-color: #4CAF50; /* Green background */
+    color: white; /* White text */
+    padding: 10px 15px; /* Top and bottom padding, left and right padding */
+    border: none; /* Remove default border */
+    border-radius: 4px; /* Rounded corners */
+    font-size: 1em; /* Font size */
+    cursor: pointer; /* Pointer cursor on hover */
+    width: 100%; /* Full width */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Optional shadow */
+}
+
+.submit-button:hover {
+    background-color: #45a049; /* Darker green on hover */
+}
+
+
+    </style>
+    
+
+
+  
+
+
+    <script>
+        // Function to calculate totals
+        function calculate() {
+            let rows = document.querySelectorAll("tr.food-row");
+            let totalSold = 0;
+            let totalLeftover = 0;
+            let totalMissingAmount = 0;
+    
+            rows.forEach(row => {
+                let unitPriceEl = row.querySelector(".unit-price");
+                let qtySoldEl = row.querySelector(".qty-sold input");
+                let leftoverEl = row.querySelector(".leftover input");
+                let qtySentEl = row.querySelector(".qty-sent input");
+    
+                if (unitPriceEl && qtySoldEl && leftoverEl && qtySentEl) {
+                    let unitPrice = parseFloat(unitPriceEl.textContent) || 0;
+                    let qtySold = parseFloat(qtySoldEl.value) || 0;
+                    let leftover = parseFloat(leftoverEl.value) || 0;
+                    let qtySent = parseFloat(qtySentEl.value) || 0;
+    
+                    // Calculate total amount of sold item
+                    let soldAmount = unitPrice * qtySold;
+                    row.querySelector(".total-sold").textContent = soldAmount.toFixed(2);
+                    totalSold += soldAmount;
+    
+                    // Calculate total amount for left over
+                    let leftoverAmount = unitPrice * leftover;
+                    row.querySelector(".total-leftover").textContent = leftoverAmount.toFixed(2);
+                    totalLeftover += leftoverAmount;
+    
+                    // Calculate missing quantity
+                    let missing = qtySent - (qtySold + leftover);
+                    row.querySelector(".missing").textContent = missing.toFixed(2);
+    
+                    // Calculate amount of missing items
+                    let missingAmount = missing * unitPrice;
+                    row.querySelector(".missing-amount").textContent = missingAmount.toFixed(2);
+                    totalMissingAmount += missingAmount;
+                } else {
+                    console.error("Some elements are missing in the row.");
+                }
+            });
+    
+            // Update totals in footer
+            document.querySelector(".total-sold-footer").textContent = totalSold.toFixed(2);
+            document.querySelector(".total-leftover-footer").textContent = totalLeftover.toFixed(2);
+            document.querySelector(".total-missing-amount-footer").textContent = totalMissingAmount.toFixed(2);
+        }
+    
+        // Function to submit the report to Firebase
+      
+        function submitReport() {
+    const dateInput = document.getElementById("date-input").value;
+    if (!dateInput) {
+        alert("Please select a date.");
+        return;
+    }
+
+    const db = firebase.database();
+    const reportRef = db.ref(dateInput); // Reference to the selected date
+
+    // Retrieve the existing data from the Firebase node
+    reportRef.once('value').then(snapshot => {
+        const existingData = snapshot.val() || {}; // Get existing data or initialize as empty
+
+        const rows = document.querySelectorAll("tr.food-row");
+        const newReportData = [];
+
+        const headers = [
+            "Items",
+            "Quantity Sent",
+            "Unit Price (Ghs)",
+            "Total Quantity Sold for the Day",
+            "Total Amount Sold (Ghs)",
+            "Received By",
+            "Left Over Quantity",
+            "Total Amount (Left Over)",
+            "Missing",
+            "Amount of Missing Items"
+        ];
+
+        rows.forEach(row => {
+            const rowData = {};
+            rowData[headers[0]] = row.cells[0].textContent; // Items (e.g., Banku, Tilapia, etc.)
+
+            // Capture the values for each column, ensuring blanks don't overwrite
+            rowData[headers[1]] = row.querySelector('.qty-sent input')?.value.trim() || 'N/A';
+            rowData[headers[2]] = row.querySelector('.unit-price')?.textContent || 'N/A';
+            rowData[headers[3]] = row.querySelector('.qty-sold input')?.value.trim() || 'N/A';
+            rowData[headers[4]] = row.querySelector('.total-sold')?.textContent || 'N/A';
+            rowData[headers[5]] = row.querySelector('.received-by input')?.value.trim() || 'N/A';
+            rowData[headers[6]] = row.querySelector('.leftover input')?.value.trim() || 'N/A';
+            rowData[headers[7]] = row.querySelector('.total-leftover')?.textContent || 'N/A';
+            rowData[headers[8]] = row.querySelector('.missing')?.textContent || 'N/A';
+            rowData[headers[9]] = row.querySelector('.missing-amount')?.textContent || 'N/A';
+
+            newReportData.push(rowData);
+        });
+
+        // Collect total data from tfoot
+        const totalSoldFooter = document.querySelector(".total-sold-footer").textContent || null;
+        const totalLeftoverFooter = document.querySelector(".total-leftover-footer").textContent || null;
+        const totalMissingAmountFooter = document.querySelector(".total-missing-amount-footer").textContent || null;
+        const actualSales = document.querySelector('input[placeholder="Enter Actual Sales"]').value.trim() || null;
+        const remarks = document.querySelector('.remarks-input').value.trim() || null;
+
+        const newTotals = {
+            totalSold: totalSoldFooter,
+            totalLeftover: totalLeftoverFooter,
+            totalMissingAmount: totalMissingAmountFooter,
+            actualSales,
+            remarks
+        };
+
+        // Merge new data with existing data, ensuring blanks don't replace existing values
+        const mergedData = mergeData(existingData, { reportData: newReportData, totals: newTotals });
+
+        // Update Firebase with the merged data
+        reportRef.set(mergedData)
+            .then(() => {
+                alert("Report submitted successfully!");
+            })
+            .catch((error) => {
+                console.error("Error submitting report: ", error);
+            });
+    });
+}
+
+// Function to merge existing data with new data, preventing blanks from replacing existing values
+function mergeData(existingData, newData) {
+    const mergedData = { ...existingData }; // Start with the existing data
+
+    // Merge report data
+    if (newData.reportData) {
+        newData.reportData.forEach((newRow, index) => {
+            if (mergedData.reportData && mergedData.reportData[index]) {
+                const existingRow = mergedData.reportData[index];
+
+                // Merge each field, only replacing if newRow has a valid non-blank value
+                Object.keys(newRow).forEach(key => {
+                    if (newRow[key] && newRow[key] !== '' && newRow[key] !== 'N/A') {
+                        // Only replace if the new value is not blank, not empty, and not 'N/A'
+                        existingRow[key] = newRow[key];
+                    }
+                });
+            } else {
+                // If the row doesn't exist in the existing data, add it as a new row
+                mergedData.reportData = mergedData.reportData || [];
+                mergedData.reportData[index] = newRow;
+            }
+        });
+    }
+
+    // Merge totals data
+    if (newData.totals) {
+        mergedData.totals = mergedData.totals || {};
+        Object.keys(newData.totals).forEach(key => {
+            if (newData.totals[key] && newData.totals[key] !== '' && newData.totals[key] !== null) {
+                // Only replace if the new total is valid (non-empty, non-null)
+                mergedData.totals[key] = newData.totals[key];
+            }
+        });
+    }
+
+    return mergedData;
+}
+
+
+    </script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.9.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.9.1/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.9.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.9.1/firebase-performance.js"></script>
+    
+    <script>
+        // Initialize Firebase  
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPaGSjayV3tk9KKH5FjvRCkdlcWGczR_M",
+  authDomain: "rabs-kitchen-report-sheet.firebaseapp.com",
+  projectId: "rabs-kitchen-report-sheet",
+  storageBucket: "rabs-kitchen-report-sheet.appspot.com",
+  messagingSenderId: "856442665646",
+  appId: "1:856442665646:web:bd769e9c230bee32244b3f",
+  measurementId: "G-F5XBJY8PB7"
+};
+    
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    
+        // Initialize Performance Monitoring
+        const perf = firebase.performance();
+    
+        // Initialize Analytics
+        firebase.analytics();
+    </script>
+    
+</head>
+<body>
+
+
+    <script>
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker
+            .register("/service-worker.js")
+            .then(() => console.log("Service Worker Registered"));
+        }
+      </script>
+
+      
+    <h1>RABS KITCHEN REPORT SHEET</h1>
+    <div class="table-container">
+        <label for="date-input" style="position: sticky; top: 0px; margin-left: -10px; background-color: #4CAF50; color: white; padding: 10px; z-index: 3; display: inline-block; font-weight: bold;">
+            <strong>Date:</strong>
+        </label>
+        <input type="date" id="date-input" placeholder="Select Date" style="position: sticky; font-size: 14px; top: 0px; padding: 10px 90px; border: 2px solid red; /* Red outline */ border-radius: 4px; width: auto; box-sizing: border-box; background-color: white; color: black; z-index: 3;" />
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead style="overflow-x: auto; top: 40px; left: 0; background-color: #4CAF50; color: white; z-index: 2;">
+                <tr style="margin-left: -40px;">
+                    <th>Items</th>
+                    <th>Quantity Sent</th>
+                    <th>Unit Price (Ghs)</th>
+                    <th>Total Quantity Sold for the Day</th>
+                    <th>Total Amount Sold (Ghs)</th>
+                    <th>Received By</th>
+                    <th>Left Over Quantity</th>
+                    <th>Total Amount (Left Over)</th>
+                    <th>Missing</th>
+                    <th>Amount of Missing Items</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Banku</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" />
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Eba</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" />
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+
+
+
+
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Rice Ball</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" />
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Lagba</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" />
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Amala</td>
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" />
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Tz</td>
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" />
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Waghashi</td>
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" />
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Fried Meat</td>
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" />
+                    </td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Tuna</td>
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" />
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Fried Fish</td>
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" />
+                    </td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Peanut Soup (Protein)</td>
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" />
+                    </td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Cow Tail/Wele</td>
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" />
+                    </td>
+                    <td class="unit-price">20</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Agushi Soup Only</td>
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" />
+                    </td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Agushi Soup (Protein)</td>
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" />
+                    </td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Salmon</td>
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" />
+                    </td>
+                    <td class="unit-price">20</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Intestine</td>
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" />
+                    </td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                
+
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Okro Soup Only</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Okro Soup (Protein)</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Palm Nut Soup (Protein)</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Egg Stew</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+    
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Kontomire</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Cabbage Stew</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Fried Goat</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">25</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Cake</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">20</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Meat Pie</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Cup Cake</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">5</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Spring Roll</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">3</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Biscuit</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+
+
+
+
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Samosa</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">3</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Plantain Chips 10 Ghs</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+
+
+
+
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Plantain Chips 20 Ghs</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">20</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Plantain Chips 40 Ghs</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">40</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Plantain Chips 60 Ghs</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">60</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Chin Chin 10 Ghs</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Chin Chin 20 Ghs</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">20</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Chin Chin 40 Ghs</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">40</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Chin Chin 60 Ghs</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">60</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Labadi Yam with Chofi</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">80</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Fries with Grilled Chicken</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">80</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+
+
+                <tr class="food-row">
+                    <td>Fried Yam with Grilled Chicken</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">80</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Chofi with fried yam</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">80</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Chofi</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">30</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Chofi with French Fries</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">80</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Jollof Rice</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">25</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Fried Rice</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">25</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Fried Chicken</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Grilled Chicken</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">40</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Plain Rice</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">20</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row">
+                    <td>120 Acheke Tilapia</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">120</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>150 Acheke and Tilapia</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">150</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Acheke and Cassava Fish</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">100</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Banku and Tilapia 100</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">100</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Banku and Tilapia 120</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">120</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Jollof with Tilapia</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">100</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Fried Rice with Tilapia</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">100</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Acheke with Chicken</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">100</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row">
+                    <td>Plain Rice With Tilapia</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">100</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Yam Chips and Tilapia</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">100</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Extra Tilapia 80</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">80</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Ghs 100 Extra Tilapia</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">100</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Extra Fried Egg</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">5</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Cooked Egg</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">5</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Extra Plantain</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Extra Acheke</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Extra Chili</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">5</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+
+                <tr class="food-row">
+                    <td>Cooked Yam</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">2</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+
+
+
+                
+
+
+
+                
+            
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Chicken stew (Protein)</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+
+                
+
+
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Meat stew (Protein)</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">10</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td>Assorted Jollof</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">70</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+
+
+                <!-- <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Stute
+
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">45</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr> -->
+
+            
+                <tr class="food-row">
+                    <td>Assorted Noodles</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">80</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Tilapia Light soup (Protein)</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">40</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Goat Light Soup (Protein)</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">20</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+
+                
+
+                 <tr class="food-row">
+                    <td style="background-color: #db0af7;">Chicken light Soup (Protein)</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                
+
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Meat light soup (Protein)</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Dry Fish</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">30</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Snail</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">20</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+            
+                <tr class="food-row">
+                    <td style="background-color: #db0af7;">Fufu</td> 
+                    <td class="qty-sent">
+                        <input type="number" onchange="calculate()" style="background-color: #f0f1f1;" placeholder="Enter quantity" /> 
+                    </td>
+                    <td class="unit-price">20</td>
+                    <td class="qty-sold">
+                        <input type="number" onchange="calculate()" />
+                    </td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by">
+                        <input type="text" />
+                    </td>
+                    <td class="leftover">
+                        <input type="number" onchange="calculate()" />
+                    </td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+                
+
+                <!-- DRINKS BEGINS FROM THIS PART -->
+
+              
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Blue Jean</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">20</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <!-- <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>M
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">35</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr> -->
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Martinellis</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Mojito</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Can Sprite</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">12</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Arizonal</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">25</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Novus</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">20</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Coke</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">12</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Fanta</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">12</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+                
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Frutelli</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">35</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Ceres</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">45</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Hollandia 1L</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">28</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Tarczyn</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">17</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Kallypo</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">5</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>B.B Cocktail</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Welch</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">40</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Bel-Aqua</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">3</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Donsimon 1L</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">12</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Can Donsimon</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">12</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Can Malt</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Rab's Pine-Ginger Juice</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Rab's Sobo</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Rab's Tiger Nut Juice</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Molinera</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">20</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+
+                 
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Lucozade</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Abest</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+               
+
+
+               <!-- <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Arizonal
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">25</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Novus</td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">20</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+                
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Coke
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">12</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Fanta
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">12</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Donsimon 1L 
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">35
+                    </td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Can Donsimon
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">20</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Rab's Sobo
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Rab's Tiger Nut Juice
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">20</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Rab's Pine-Ginger Juice
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Sagiko
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">12</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Frutelli
+
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">35</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Ceres
+
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">45</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Hollandia 1L
+
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">28</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Tarczyn
+
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">17</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Kallypo
+
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">5</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>B.B Cocktail
+
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">15</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Welch
+
+
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">40</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr>
+
+
+                
+
+
+                <tr class="food-row" style="background-color: #f10c7f;">
+                    <td>Bel-Aqua
+
+
+                    </td>
+                    <td class="qty-sent"><input type="number" onchange="calculate()" /></td>
+                    <td class="unit-price">3</td>
+                    <td class="qty-sold"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-sold">0</td>
+                    <td class="received-by"><input type="text" /></td>
+                    <td class="leftover"><input type="number" onchange="calculate()" /></td>
+                    <td class="total-leftover">0</td>
+                    <td class="missing">0</td>
+                    <td class="missing-amount">0</td>
+                </tr> -->
+
+
+
+
+
+
+
+
+                <!-- Add more rows as needed -->
+            </tbody>
+
+            <tfoot style="color: rgb(255, 0, 43); font-size: 20px;">
+                <tr>
+                    <td colspan="4">Total Sales</td>
+                    <td class="total-sold-footer">0.00</td>
+                    <td></td>
+                    <td></td>
+                    <td class="total-leftover-footer">0.00</td>
+                    <td></td>
+                    <td class="total-missing-amount-footer">0.00</td>
+                </tr>
+                <tr>
+                    <td><strong>Actual Sales (Ghs)</strong></td>
+                    <td><input type="number" placeholder="Enter Actual Sales" /></td>
+                    <td colspan="4"></td>
+                </tr>
+                <tr>
+                    <td><strong>Remarks</strong></td>
+                    <td colspan="4"><input type="text" placeholder="Enter remarks about the day sales" class="remarks-input" /></td>
+                </tr>
+                
+                <td colspan="5">
+                    <button class="submit-button" onclick="submitReport()">Submit Report</button>
+                </td>
+                
+                </tr>
+            </tfoot>
+            
+            
+
+        </table>
+    </div>
+
+
+
+    <script>
+        document.getElementById("date-input").addEventListener("change", fetchReportData);
+    
+        function fetchReportData() {
+    const dateInput = document.getElementById("date-input").value;
+    if (!dateInput) {
+        alert("Please select a date.");
+        return;
+    }
+
+    const db = firebase.database();
+    const reportRef = db.ref(dateInput); // Reference to the selected date
+
+    // Check if data exists for the selected date
+    reportRef.once('value')
+    .then(snapshot => {
+        const reportData = snapshot.val();
+        console.log("Fetched Data:", reportData); // Debugging: log the data to see what's retrieved
+
+        if (reportData) {
+            console.log("Data exists for this date.");
+            if (reportData.reportData) {
+                console.log("Populating the table with fetched data...");
+                
+                const rows = document.querySelectorAll("tr.food-row");
+                const headers = [
+                    "Items",
+                    "Quantity Sent",
+                    "Unit Price (Ghs)",
+                    "Total Quantity Sold for the Day",
+                    "Total Amount Sold (Ghs)",
+                    "Received By",
+                    "Left Over Quantity",
+                    "Total Amount (Left Over)",
+                    "Missing",
+                    "Amount of Missing Items"
+                ];
+
+                // Loop through each row and fill in the data
+                rows.forEach((row, index) => {
+                    const rowData = reportData.reportData[index];
+                    if (rowData) {
+                        row.querySelector('.qty-sent input').value = rowData[headers[1]] || '';
+                        row.querySelector('.qty-sold input').value = rowData[headers[3]] || '';
+                        row.querySelector('.leftover input').value = rowData[headers[6]] || '';
+                    }
+                });
+
+                // Populate totals and other fields if available
+                if (reportData.totals) {
+                    document.querySelector('.total-sold-footer').textContent = reportData.totals.totalSold || '0.00';
+                    document.querySelector('.total-leftover-footer').textContent = reportData.totals.totalLeftover || '0.00';
+                    document.querySelector('.total-missing-amount-footer').textContent = reportData.totals.totalMissingAmount || '0.00';
+                    document.querySelector('input[placeholder="Enter Actual Sales"]').value = reportData.totals.actualSales || '';
+                    document.querySelector('.remarks-input').value = reportData.totals.remarks || '';
+                }
+            } else {
+                console.log("No report data found.");
+            }
+        } else {
+            console.log("No data found for the selected date.");
+        }
+    })
+    .catch(error => {
+        console.error("Error fetching data: ", error);
+    });
+}
+
+
+
+    </script>
+
+
+</body>
+</html>

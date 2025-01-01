@@ -1,0 +1,21 @@
+{
+    "name": "RABS Kitchen Management Database",
+    "short_name": "RABS Kitchen",
+    "start_url": "/index.html",
+    "display": "standalone",
+    "background_color": "#f4f4f4",
+    "theme_color": "#4CAF50",
+    "icons": [
+      {
+        "src": "rabs.jpeg",
+        "type": "image/png",
+        "sizes": "192x192"
+      },
+      {
+        "src": "rabs.jpeg",
+        "type": "image/png",
+        "sizes": "512x512"
+      }
+    ]
+  }
+  
