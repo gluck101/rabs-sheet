@@ -1,20 +1,21 @@
 {
     "name": "RABS Kitchen Management Database",
     "short_name": "RABS Kitchen",
+    "description": "Manage and track kitchen sales effectively.",
     "start_url": "/index.html",
     "display": "standalone",
-    "background_color": "#f4f4f4",
+    "background_color": "#ffffff",
     "theme_color": "#4CAF50",
     "icons": [
       {
-        "src": "rabs.jpeg",
-        "type": "image/png",
-        "sizes": "192x192"
+        "src": "rabs1.png", 
+        "sizes": "512x512",
+        "type": "image/png"
       },
       {
-        "src": "rabs.jpeg",
-        "type": "image/png",
-        "sizes": "512x512"
+        "src": "rabs2.png", 
+        "sizes": "192x192",
+        "type": "image/png"
       }
     ]
   }
