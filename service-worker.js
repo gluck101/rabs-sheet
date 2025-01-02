@@ -2,6 +2,8 @@ const CACHE_NAME = "rabs-cache-v1";
 const urlsToCache = [
   "/index.html",
   "/manifest.json",
+  "/service-worker.js",  // Add the service worker itself to the cache
+
   "/rabs.jpeg",
   // Add other assets like CSS, JS files, and images here
 ];
