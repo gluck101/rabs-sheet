@@ -8,7 +8,9 @@
      <!-- Favicon for your site -->
      <link rel="icon" href="rabs.jpeg" type="image/png">
 
-     <link rel="manifest" href="/manifest.json">
+     <link rel="manifest" href="./manifest.json">
+     <link rel="manifest" href="./service-worker.js">
+
 
 
 
@@ -362,6 +364,53 @@ function mergeData(existingData, newData) {
         }
       </script>
 
+ <script>
+   window.onload = () => {
+     'use strict';
+
+     // Register the service worker
+     if ('serviceWorker' in navigator) {
+       navigator.serviceWorker.register('./service-worker.js').then(() => {
+         console.log("Service Worker registered successfully!");
+       }).catch((error) => {
+         console.error("Service Worker registration failed:", error);
+       });
+     }
+   };
+
+   let deferredPrompt;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault(); // Prevent the mini-infobar
+  deferredPrompt = e; // Save the event for later use
+
+  // Make the button visible
+  const installButton = document.getElementById("installButton");
+  if (installButton) {
+    installButton.style.display = "block";
+
+    installButton.addEventListener("click", () => {
+      deferredPrompt.prompt(); // Show the install prompt
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === "accepted") {
+          console.log("User accepted the installation");
+        } else {
+          console.log("User dismissed the installation");
+        }
+        deferredPrompt = null; // Reset the deferred prompt
+      });
+    });
+  }
+});
+
+
+const installButton = document.getElementById("installButton");
+if (installButton) {
+  installButton.style.display = "block"; // Force the button to show
+}
+
+
+ </script>
 
     <h1>RABS KITCHEN REPORT SHEET</h1>
     <div class="table-container">
@@ -2247,12 +2296,15 @@ function mergeData(existingData, newData) {
                     <td><input type="number" placeholder="Enter Actual Sales" /></td>
                     <td colspan="4"></td>
                 </tr>
+
                 <tr>
                     <td><strong>Remarks</strong></td>
                     <td colspan="4"><input type="text" placeholder="Enter remarks about the day sales" class="remarks-input" /></td>
                 </tr>
                 
                 <td colspan="5">
+                    <button id="installButton" style="display: none;">Install App</button>
+
                     <button class="submit-button" onclick="submitReport()">Submit Report</button>
                 </td>
                 
@@ -2262,6 +2314,8 @@ function mergeData(existingData, newData) {
             
 
         </table>
+
+        
     </div>
 
 
@@ -2334,9 +2388,9 @@ function mergeData(existingData, newData) {
     });
 }
 
-
-
     </script>
+
+
 
 
 </body>
